@@ -3,6 +3,10 @@
 require_once '../vendor/autoload.php';
 
 $scheme = getenv('HTTP_PROTO') ?: 'https';
-$exporter = new \Ujamii\OpenMetrics\Sentry\SentryExporter(getenv('AUTH_TOKEN'), $scheme .'://'. getenv('SENTRY_HOST') .'/api/0/');
+$exporter = new \WayToHealth\OpenMetrics\Ummon\UmmonExporter(
+    $scheme . '://' . getenv('UMMON_HOST'),
+    getenv('UMMON_USER'),
+    getenv('UMMON_PASSWORD')
+);
 $exporter->run();
 

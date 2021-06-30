@@ -1,12 +1,12 @@
 {
-    "name": "ujamii/prometheus-sentry-exporter",
+    "name": "ummon-server/prometheus-ummon-exporter",
     "license": "MIT",
-    "description": "Exports sentry project metrics for prometheus.",
+    "description": "Exports ummon metrics for prometheus.",
     "type": "project",
     "authors": [
         {
-            "name": "Michael Grundkötter",
-            "email": "mg@ujamii.com"
+            "name": "Michael Kopinsky",
+            "email": "mkopinsky@gmail.com"
         }
     ],
     "require": {
@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Ujamii\\OpenMetrics\\Sentry\\": "src/"
+            "WayToHealth\\OpenMetrics\\Ummon\\": "src/"
         }
     }
 }
