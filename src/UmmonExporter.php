@@ -2,9 +2,11 @@
 
 namespace WayToHealth\OpenMetrics\Ummon;
 
+use OpenMetricsPhp\Exposition\Text\Collections\CounterCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\GaugeCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\LabelCollection;
 use OpenMetricsPhp\Exposition\Text\HttpResponse;
+use OpenMetricsPhp\Exposition\Text\Metrics\Counter;
 use OpenMetricsPhp\Exposition\Text\Metrics\Gauge;
 use OpenMetricsPhp\Exposition\Text\Types\MetricName;
 use Psr\Http\Message\ResponseInterface;
@@ -56,8 +58,6 @@ class UmmonExporter
         )
                     ->withHeader('Content-Type', 'text/plain; charset=utf-8')
                     ->respond();
-        // var_dump($collections->collections[2]);
-        // die();
     }
 
     private function getStatusMetrics($statusData): array
@@ -97,6 +97,8 @@ class UmmonExporter
     private function getTaskMetrics($taskData): array
     {
         $lastSuccessfulRun = GaugeCollection::withMetricName(MetricName::fromString('ummon_task_last_successful_run'))->withHelp('Unix Timestamp for the last time a task was successfully run');
+        $successfulRuns = CounterCollection::withMetricName(MetricName::fromString('ummon_task_successful_runs'))->withHelp('Cumulative count of successful runs of a task since last reboot of ummon-server');
+        $failedRuns = CounterCollection::withMetricName(MetricName::fromString('ummon_task_failed_runs'))->withHelp('Cumulative count of failed runs of a task since last reboot of ummon-server');
 
         foreach ($taskData->collections as $collection) {
             foreach ($collection->tasks as $task) {
@@ -109,11 +111,31 @@ class UmmonExporter
                              ])
                          )
                 );
+                $successfulRuns->add(
+                    Counter::fromValue($task->totalSuccessfulRuns)
+                         ->withLabelCollection(
+                             LabelCollection::fromAssocArray([
+                                 'task'       => $task->id,
+                                 'collection' => $collection->collection,
+                             ])
+                         )
+                );
+                $failedRuns->add(
+                    Counter::fromValue($task->totalFailedRuns)
+                         ->withLabelCollection(
+                             LabelCollection::fromAssocArray([
+                                 'task'       => $task->id,
+                                 'collection' => $collection->collection,
+                             ])
+                         )
+                );
             }
         }
 
         return [
             $lastSuccessfulRun,
+            $successfulRuns,
+            $failedRuns,
         ];
     }
 
