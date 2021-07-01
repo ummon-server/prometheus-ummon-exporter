@@ -20,10 +20,27 @@ docker run -d --name ummon-prometheus \
   -e UMMON_USER=monitoring \
   -e UMMON_PASSWORD=xxxxx \
   -p "80:80" \
-  ummonserver/prometheus-ummon-exporter
+  ghcr.io/ummon-server/prometheus-ummon-exporter:latest
+```
+### with docker-compose
+```yaml
+version: "2"
+
+services:
+  ummon_exporter:
+    container_name: ummon_exporter
+    image: ghcr.io/ummon-server/prometheus-ummon-exporter:latest
+    restart: always
+    hostname: ummon_exporter
+    ports:
+      - "8001:80"
+    environment:
+      - UMMON_HOST=ummon.example.com
+      - UMMON_USER=monitoring
+      - UMMON_PASSWORD=xxxxx
 ```
 
-View on [Docker Hub](https://hub.docker.com/r/ummonserver/prometheus-ummon-exporter)
+View on [Github Packages](https://github.com/ummon-server/prometheus-ummon-exporter/pkgs/container/prometheus-ummon-exporter)
 
 ## Output
 
@@ -56,3 +73,5 @@ ummon_task_failed_runs_total{task="collection1.task1", collection="collection1"}
 ummon_task_failed_runs_total{task="collection1.task2", collection="collection1"} 0.000000
 ```
 
+## Credits
+Thanks to [ujamii/prometheus-sentry-exporter](https://github.com/ujamii/prometheus-sentry-exporter) which served as the inspiration and skeleton for this exporter.
