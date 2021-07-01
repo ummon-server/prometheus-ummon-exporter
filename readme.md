@@ -1,32 +1,12 @@
-# Exporter for sentry data in prometheus format
+# Exporter for ummon data in prometheus format
 
-This package uses the [Sentry](https://sentry.io/) web [api](https://docs.sentry.io/api/) to query for some statistics and outputs them in [OpenMetrics](https://github.com/OpenObservability/OpenMetrics) format to be scraped by [prometheus](https://prometheus.io/).
+This package uses the [ummon-server](https://github.com/ummon-server/ummon-server/) API to query for some statistics and outputs them in [OpenMetrics](https://github.com/OpenObservability/OpenMetrics) format to be scraped by [prometheus](https://prometheus.io/).
 
-You can also fire it up as a [docker container](#with-docker).
+You can most conveniently fire it up as a [docker container](#with-docker).
 
 ## Usage
 
-Using this exporter with Composer or Docker, you will need the hostname of your sentry installation and an auth token, which you can create via `https://<YOUR-SENTRY-HOST>/api/` if you're working with the **Sentry self hosted**. If you're working with **Sentry cloud**, you will need to create the token via [`https://sentry.io/settings/account/api/auth-tokens/`](https://sentry.io/settings/account/api/auth-tokens/).
-
-### with Composer
-
-**Installation**
-
-```shell
-composer req ujamii/prometheus-sentry-exporter
-```
-
-**Usage in your custom file**
-
-```php
-require_once 'vendor/autoload.php';
-
-$sentryBase = 'https://<YOUR-SENTRY-HOST>/api/0/';
-$token      = '<AUTH-TOKEN>'; // get from https://<YOUR-SENTRY-HOST>/api/
-
-$exporter = new \Ujamii\OpenMetrics\Sentry\SentryExporter($token, $sentryBase);
-$exporter->run();
-```
+Using this exporter with Docker, you will need the hostname of your ummon instance and a username and password.
 
 ### with Docker
 
@@ -35,18 +15,44 @@ The image is based on `php:7.2-apache` and thus exposes data on port 80 by defau
 Configuration is done with 3 env variables: `UMMON_HOST`, `UMMON_USER` and `UMMON_PASSWORD`. `HTTP_PROTO` can optionally be passed; it defaults to `https`.
 
 ```shell
-docker run -d --name ummon-prometheus -e UMMON_HOST=ummon.example.com -e UMMON_USER=monitoring -e UMMON_PASSWORD=xxxxx -p "80:80" ummon-server/prometheus-ummon-exporter
+docker run -d --name ummon-prometheus \
+  -e UMMON_HOST=ummon.example.com \
+  -e UMMON_USER=monitoring \
+  -e UMMON_PASSWORD=xxxxx \
+  -p "80:80" \
+  ummon-server/prometheus-ummon-exporter
 ```
 
-View on [Docker Hub](https://hub.docker.com/r/ujamii/prometheus-sentry-exporter)
+View on [Docker Hub]()
 
 ## Output
 
 The script will generate something like:
 
-```
-# TYPE sentry_open_issue_events gauge
-# HELP sentry_open_issue_events Number of events for one unresolved issue.
-sentry_open_issue_events{project_slug="foobar", project_name="Foo Bar", issue_first_seen="2019-02-19T11:24:52Z", issue_last_seen="2019-02-28T09:17:47Z", issue_logger="php", issue_type="error", issue_link="https://<SENTRY-HOST>/<ORGANIZATION>/<PROJECT>/issues/1797/", issue_level="error"} 16.000000
+```prometheus
+# TYPE ummon_current_workers gauge
+# HELP ummon_current_workers Number of tasks currently being run
+ummon_current_workers 10.000000
+# TYPE ummon_max_workers gauge
+# HELP ummon_max_workers Max workers available
+ummon_max_workers 10.000000
+# TYPE ummon_queue_length gauge
+# HELP ummon_queue_length Number of tasks waiting in the queue
+ummon_queue_length 44.000000
+# TYPE ummon_is_paused gauge
+# HELP ummon_is_paused Is the server paused?
+ummon_is_paused 0.000000
+# TYPE ummon_task_last_successful_run gauge
+# HELP ummon_task_last_successful_run Unix Timestamp for the last time a task was successfully run
+ummon_task_last_successful_run{task="collection1.task1", collection="collection1"} 1625096641030.000000
+ummon_task_last_successful_run{task="collection1.task2", collection="collection1"} 1625097639502.000000
+# TYPE ummon_task_successful_runs counter
+# HELP ummon_task_successful_runs Cumulative count of successful runs of a task since last reboot of ummon-server
+ummon_task_successful_runs_total{task="collection1.task1", collection="collection1"} 2.000000
+ummon_task_successful_runs_total{task="collection1.task2", collection="collection1"} 7.000000
+# TYPE ummon_task_failed_runs counter
+# HELP ummon_task_failed_runs Cumulative count of failed runs of a task since last reboot of ummon-server
+ummon_task_failed_runs_total{task="collection1.task1", collection="collection1"} 0.000000
+ummon_task_failed_runs_total{task="collection1.task2", collection="collection1"} 0.000000
 ...
-```
+
