@@ -129,24 +129,28 @@ class UmmonExporter
                              ])
                          )
                 );
-                $successfulRuns->add(
-                    Counter::fromValue($task->totalSuccessfulRuns)
-                           ->withLabelCollection(
-                               LabelCollection::fromAssocArray([
-                                   'task'       => $task->id,
-                                   'collection' => $collection->collection,
-                               ])
-                           )
-                );
-                $failedRuns->add(
-                    Counter::fromValue($task->totalFailedRuns)
-                           ->withLabelCollection(
-                               LabelCollection::fromAssocArray([
-                                   'task'       => $task->id,
-                                   'collection' => $collection->collection,
-                               ])
-                           )
-                );
+                if (property_exists($task, 'totalSuccessfulRuns')) {
+                    $successfulRuns->add(
+                        Counter::fromValue($task->totalSuccessfulRuns)
+                               ->withLabelCollection(
+                                   LabelCollection::fromAssocArray([
+                                       'task'       => $task->id,
+                                       'collection' => $collection->collection,
+                                   ])
+                               )
+                    );
+                }
+                if (property_exists($task, 'totalFailedRuns')) {
+                    $failedRuns->add(
+                        Counter::fromValue($task->totalFailedRuns)
+                               ->withLabelCollection(
+                                   LabelCollection::fromAssocArray([
+                                       'task'       => $task->id,
+                                       'collection' => $collection->collection,
+                                   ])
+                               )
+                    );
+                }
             }
         }
 
