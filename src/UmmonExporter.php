@@ -8,6 +8,7 @@ use OpenMetricsPhp\Exposition\Text\Collections\LabelCollection;
 use OpenMetricsPhp\Exposition\Text\HttpResponse;
 use OpenMetricsPhp\Exposition\Text\Metrics\Counter;
 use OpenMetricsPhp\Exposition\Text\Metrics\Gauge;
+use OpenMetricsPhp\Exposition\Text\Types\Label;
 use OpenMetricsPhp\Exposition\Text\Types\MetricName;
 use Psr\Http\Message\ResponseInterface;
 use stdClass;
@@ -51,13 +52,44 @@ class UmmonExporter
     {
         $statusData = $this->getStatusData();
         $taskData = $this->getTaskData();
+        $instanceData = $this->getInstanceData();
 
         HttpResponse::fromMetricCollections(
+            ...$this->getInstanceMetrics($instanceData),
             ...$this->getStatusMetrics($statusData),
             ...$this->getTaskMetrics($taskData)
         )
                     ->withHeader('Content-Type', 'text/plain; charset=utf-8')
                     ->respond();
+    }
+
+    private function getInstanceData(): stdClass
+    {
+        $response = $this->httpClient->get('');
+        return $this->getJson($response);
+    }
+
+    private function getInstanceMetrics($instanceData): array
+    {
+        return [
+            GaugeCollection::fromGauges(
+                MetricName::fromString('ummon_version'),
+                Gauge::fromValue(1)->withLabels(
+                    Label::fromNameAndValue('version', $instanceData->version)
+                )
+            )->withHelp('the version string of the server'),
+            GaugeCollection::fromGauges(
+                MetricName::fromString('ummon_ok'),
+                Gauge::fromValue($instanceData->ok)
+            )->withHelp('Is the server up?'),
+        ];
+
+    }
+
+    private function getStatusData(): stdClass
+    {
+        $response = $this->httpClient->get('status');
+        return $this->getJson($response);
     }
 
     private function getStatusMetrics($statusData): array
@@ -80,12 +112,6 @@ class UmmonExporter
                 Gauge::fromValue($statusData->isPaused)
             )->withHelp('Is the server paused?'),
         ];
-    }
-
-    private function getStatusData(): stdClass
-    {
-        $response = $this->httpClient->get('status');
-        return $this->getJson($response);
     }
 
     private function getTaskData(): stdClass
