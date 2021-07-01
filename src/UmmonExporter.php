@@ -26,11 +26,6 @@ class UmmonExporter
     protected $httpClient;
 
     /**
-     * @var array
-     */
-    protected $options = [];
-
-    /**
      * UmmonExporter constructor.
      *
      * @param string $baseUri
@@ -43,9 +38,6 @@ class UmmonExporter
             'base_uri' => $baseUri,
             'auth'     => [$user, $password],
         ]);
-        $this->options = [
-            'auth' => [$user, $password],
-        ];
     }
 
     public function run(): void
@@ -139,21 +131,21 @@ class UmmonExporter
                 );
                 $successfulRuns->add(
                     Counter::fromValue($task->totalSuccessfulRuns)
-                         ->withLabelCollection(
-                             LabelCollection::fromAssocArray([
-                                 'task'       => $task->id,
-                                 'collection' => $collection->collection,
-                             ])
-                         )
+                           ->withLabelCollection(
+                               LabelCollection::fromAssocArray([
+                                   'task'       => $task->id,
+                                   'collection' => $collection->collection,
+                               ])
+                           )
                 );
                 $failedRuns->add(
                     Counter::fromValue($task->totalFailedRuns)
-                         ->withLabelCollection(
-                             LabelCollection::fromAssocArray([
-                                 'task'       => $task->id,
-                                 'collection' => $collection->collection,
-                             ])
-                         )
+                           ->withLabelCollection(
+                               LabelCollection::fromAssocArray([
+                                   'task'       => $task->id,
+                                   'collection' => $collection->collection,
+                               ])
+                           )
                 );
             }
         }
