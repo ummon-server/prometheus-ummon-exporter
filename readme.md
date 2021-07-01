@@ -20,10 +20,10 @@ docker run -d --name ummon-prometheus \
   -e UMMON_USER=monitoring \
   -e UMMON_PASSWORD=xxxxx \
   -p "80:80" \
-  ummon-server/prometheus-ummon-exporter
+  ummonserver/prometheus-ummon-exporter
 ```
 
-View on [Docker Hub]()
+View on [Docker Hub](https://hub.docker.com/r/ummonserver/prometheus-ummon-exporter)
 
 ## Output
 
@@ -54,5 +54,5 @@ ummon_task_successful_runs_total{task="collection1.task2", collection="collectio
 # HELP ummon_task_failed_runs Cumulative count of failed runs of a task since last reboot of ummon-server
 ummon_task_failed_runs_total{task="collection1.task1", collection="collection1"} 0.000000
 ummon_task_failed_runs_total{task="collection1.task2", collection="collection1"} 0.000000
-...
+```
 
