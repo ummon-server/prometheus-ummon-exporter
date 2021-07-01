@@ -2,6 +2,7 @@
 
 namespace WayToHealth\OpenMetrics\Ummon;
 
+use GuzzleHttp\Client;
 use OpenMetricsPhp\Exposition\Text\Collections\CounterCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\GaugeCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\LabelCollection;
@@ -21,21 +22,27 @@ class UmmonExporter
 {
 
     /**
-     * @var \GuzzleHttp\Client
+     * @var Client
      */
     protected $httpClient;
+    /**
+     * @var string
+     */
+    private $host;
 
     /**
      * UmmonExporter constructor.
      *
-     * @param string $baseUri
+     * @param string $host
      * @param string $user
      * @param string $password
+     * @param string $scheme
      */
-    public function __construct(string $baseUri, string $user, string $password)
+    public function __construct(string $host, string $user, string $password, string $scheme)
     {
-        $this->httpClient = new \GuzzleHttp\Client([
-            'base_uri' => $baseUri,
+        $this->host = $host;
+        $this->httpClient = new Client([
+            'base_uri' => $scheme . '://' . $host,
             'auth'     => [$user, $password],
         ]);
     }
@@ -67,12 +74,14 @@ class UmmonExporter
             GaugeCollection::fromGauges(
                 MetricName::fromString('ummon_version'),
                 Gauge::fromValue(1)->withLabels(
+                    $this->getInstanceLabel(),
                     Label::fromNameAndValue('version', $instanceData->version)
                 )
             )->withHelp('the version string of the server'),
             GaugeCollection::fromGauges(
                 MetricName::fromString('ummon_ok'),
                 Gauge::fromValue($instanceData->ok)
+                     ->withLabels($this->getInstanceLabel())
             )->withHelp('Is the server up?'),
         ];
 
@@ -90,18 +99,22 @@ class UmmonExporter
             GaugeCollection::fromGauges(
                 MetricName::fromString('ummon_current_workers'),
                 Gauge::fromValue(count($statusData->workers))
+                     ->withLabels($this->getInstanceLabel())
             )->withHelp('Number of tasks currently being run'),
             GaugeCollection::fromGauges(
                 MetricName::fromString('ummon_max_workers'),
                 Gauge::fromValue($statusData->maxWorkers)
+                     ->withLabels($this->getInstanceLabel())
             )->withHelp('Max workers available'),
             GaugeCollection::fromGauges(
                 MetricName::fromString('ummon_queue_length'),
                 Gauge::fromValue(count($statusData->queue))
+                     ->withLabels($this->getInstanceLabel())
             )->withHelp('Number of tasks waiting in the queue'),
             GaugeCollection::fromGauges(
                 MetricName::fromString('ummon_is_paused'),
                 Gauge::fromValue($statusData->isPaused)
+                     ->withLabels($this->getInstanceLabel())
             )->withHelp('Is the server paused?'),
         ];
     }
@@ -122,20 +135,22 @@ class UmmonExporter
             foreach ($collection->tasks as $task) {
                 $lastSuccessfulRun->add(
                     Gauge::fromValue($task->lastSuccessfulRun ?: 0)
+                         ->withLabels($this->getInstanceLabel())
                          ->withLabelCollection(
                              LabelCollection::fromAssocArray([
-                                 'task'       => $task->id,
                                  'collection' => $collection->collection,
+                                 'task'       => $task->id,
                              ])
                          )
                 );
                 if (property_exists($task, 'totalSuccessfulRuns')) {
                     $successfulRuns->add(
                         Counter::fromValue($task->totalSuccessfulRuns)
+                               ->withLabels($this->getInstanceLabel())
                                ->withLabelCollection(
                                    LabelCollection::fromAssocArray([
-                                       'task'       => $task->id,
                                        'collection' => $collection->collection,
+                                       'task'       => $task->id,
                                    ])
                                )
                     );
@@ -143,10 +158,11 @@ class UmmonExporter
                 if (property_exists($task, 'totalFailedRuns')) {
                     $failedRuns->add(
                         Counter::fromValue($task->totalFailedRuns)
+                               ->withLabels($this->getInstanceLabel())
                                ->withLabelCollection(
                                    LabelCollection::fromAssocArray([
-                                       'task'       => $task->id,
                                        'collection' => $collection->collection,
+                                       'task'       => $task->id,
                                    ])
                                )
                     );
@@ -161,6 +177,11 @@ class UmmonExporter
         ];
     }
 
+    private function getInstanceLabel(): Label
+    {
+        return Label::fromNameAndValue('instance', $this->host);
+    }
+
     /**
      * @param ResponseInterface $response
      *
@@ -170,5 +191,4 @@ class UmmonExporter
     {
         return json_decode($response->getBody()->getContents());
     }
-
 }
