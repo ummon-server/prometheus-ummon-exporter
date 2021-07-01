@@ -4,8 +4,6 @@ RUN apt-get update && apt-get install -y git \
  && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
  && composer --version
 
-RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
-
 COPY --chown=www-data:www-data . /var/www/html
 RUN php /usr/local/bin/composer install --optimize-autoloader --no-dev  --prefer-dist \
  && apt-get clean \
