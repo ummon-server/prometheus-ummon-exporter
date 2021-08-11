@@ -3,6 +3,7 @@
 namespace WayToHealth\OpenMetrics\Ummon;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
 use OpenMetricsPhp\Exposition\Text\Collections\CounterCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\GaugeCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\LabelCollection;
@@ -49,17 +50,28 @@ class UmmonExporter
 
     public function run(): void
     {
-        $statusData = $this->getStatusData();
-        $taskData = $this->getTaskData();
-        $instanceData = $this->getInstanceData();
+        try {
+            $statusData = $this->getStatusData();
+            $taskData = $this->getTaskData();
+            $instanceData = $this->getInstanceData();
 
-        HttpResponse::fromMetricCollections(
-            ...$this->getInstanceMetrics($instanceData),
-            ...$this->getStatusMetrics($statusData),
-            ...$this->getTaskMetrics($taskData)
-        )
-                    ->withHeader('Content-Type', 'text/plain; charset=utf-8')
-                    ->respond();
+            HttpResponse::fromMetricCollections(
+                ...$this->getInstanceMetrics($instanceData),
+                ...$this->getStatusMetrics($statusData),
+                ...$this->getTaskMetrics($taskData)
+            )
+                        ->withHeader('Content-Type', 'text/plain; charset=utf-8')
+                        ->respond();
+        } catch (ConnectException $exception) {
+            $ummonDown = GaugeCollection::fromGauges(
+                MetricName::fromString('ummon_ok'),
+                Gauge::fromValue(0)
+                     ->withLabels($this->getInstanceLabel())
+            )->withHelp('Is the server up?');
+            HttpResponse::fromMetricCollections($ummonDown)
+                        ->withHeader('Content-Type', 'text/plain; charset=utf-8')
+                        ->respond();;
+        }
     }
 
     private function getInstanceData(): stdClass
