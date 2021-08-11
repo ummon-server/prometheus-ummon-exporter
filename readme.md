@@ -73,5 +73,20 @@ ummon_task_failed_runs_total{task="collection1.task1", collection="collection1"}
 ummon_task_failed_runs_total{task="collection1.task2", collection="collection1"} 0.000000
 ```
 
+## Development
+To run in development:
+
+```shell
+composer install
+docker run --rm \
+  -e UMMON_HOST=ummon.example.com \
+  -e UMMON_USER=monitoring \
+  -e UMMON_PASSWORD=xxxxx \
+  -v $PWD:/var/www/html \
+  -p "8001:80" \
+  php:7.2-apache
+```
+
+
 ## Credits
 Thanks to [ujamii/prometheus-sentry-exporter](https://github.com/ujamii/prometheus-sentry-exporter) which served as the inspiration and skeleton for this exporter.
