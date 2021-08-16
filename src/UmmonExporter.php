@@ -140,43 +140,46 @@ class UmmonExporter
     private function getTaskMetrics($taskData): array
     {
         $lastSuccessfulRun = GaugeCollection::withMetricName(MetricName::fromString('ummon_task_last_successful_run'))->withHelp('Unix Timestamp for the last time a task was successfully run');
+        $lastExitStatus = GaugeCollection::withMetricName(MetricName::fromString('ummon_task_last_exit_status'))->withHelp('Exit code from the last run of the task');
         $successfulRuns = CounterCollection::withMetricName(MetricName::fromString('ummon_task_successful_runs'))->withHelp('Cumulative count of successful runs of a task since last reboot of ummon-server');
         $failedRuns = CounterCollection::withMetricName(MetricName::fromString('ummon_task_failed_runs'))->withHelp('Cumulative count of failed runs of a task since last reboot of ummon-server');
 
         foreach ($taskData->collections as $collection) {
             foreach ($collection->tasks as $task) {
+                $labels = LabelCollection::fromAssocArray([
+                    'collection' => $collection->collection,
+                    'task'       => $task->id,
+                ]);
                 $lastSuccessfulRun->add(
                     Gauge::fromValue($task->lastSuccessfulRun / 1000 ?: 0)
                          ->withLabels($this->getInstanceLabel())
-                         ->withLabelCollection(
-                             LabelCollection::fromAssocArray([
-                                 'collection' => $collection->collection,
-                                 'task'       => $task->id,
-                             ])
-                         )
+                         ->withLabelCollection($labels)
                 );
                 if (property_exists($task, 'totalSuccessfulRuns')) {
                     $successfulRuns->add(
                         Counter::fromValue($task->totalSuccessfulRuns)
                                ->withLabels($this->getInstanceLabel())
-                               ->withLabelCollection(
-                                   LabelCollection::fromAssocArray([
-                                       'collection' => $collection->collection,
-                                       'task'       => $task->id,
-                                   ])
-                               )
+                               ->withLabelCollection($labels)
                     );
                 }
                 if (property_exists($task, 'totalFailedRuns')) {
                     $failedRuns->add(
                         Counter::fromValue($task->totalFailedRuns)
                                ->withLabels($this->getInstanceLabel())
-                               ->withLabelCollection(
-                                   LabelCollection::fromAssocArray([
-                                       'collection' => $collection->collection,
-                                       'task'       => $task->id,
-                                   ])
-                               )
+                               ->withLabelCollection($labels)
+                    );
+                }
+                $recentExitCodes = $task->recentExitCodes;
+                if (count($recentExitCodes) > 0) {
+                    $gaugeValue = $recentExitCodes[count($recentExitCodes) - 1];
+                    if (is_null($gaugeValue)) {
+                        // The last exit status was null. Report it as 999
+                        $gaugeValue = 999;
+                    }
+                    $lastExitStatus->add(
+                        Gauge::fromValue($gaugeValue)
+                               ->withLabels($this->getInstanceLabel())
+                               ->withLabelCollection($labels)
                     );
                 }
             }
@@ -184,6 +187,7 @@ class UmmonExporter
 
         return [
             $lastSuccessfulRun,
+            $lastExitStatus,
             $successfulRuns,
             $failedRuns,
         ];
