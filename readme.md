@@ -61,8 +61,8 @@ ummon_queue_length 44.000000
 ummon_is_paused 0.000000
 # TYPE ummon_task_last_successful_run gauge
 # HELP ummon_task_last_successful_run Unix Timestamp for the last time a task was successfully run
-ummon_task_last_successful_run{task="collection1.task1", collection="collection1"} 1625096641030.000000
-ummon_task_last_successful_run{task="collection1.task2", collection="collection1"} 1625097639502.000000
+ummon_task_last_successful_run{task="collection1.task1", collection="collection1"} 1625096641.030000
+ummon_task_last_successful_run{task="collection1.task2", collection="collection1"} 1625097639.502000
 # TYPE ummon_task_successful_runs counter
 # HELP ummon_task_successful_runs Cumulative count of successful runs of a task since last reboot of ummon-server
 ummon_task_successful_runs_total{task="collection1.task1", collection="collection1"} 2.000000

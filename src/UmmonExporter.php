@@ -146,7 +146,7 @@ class UmmonExporter
         foreach ($taskData->collections as $collection) {
             foreach ($collection->tasks as $task) {
                 $lastSuccessfulRun->add(
-                    Gauge::fromValue($task->lastSuccessfulRun ?: 0)
+                    Gauge::fromValue($task->lastSuccessfulRun / 1000 ?: 0)
                          ->withLabels($this->getInstanceLabel())
                          ->withLabelCollection(
                              LabelCollection::fromAssocArray([
