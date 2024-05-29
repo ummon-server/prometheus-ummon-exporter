@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "openmetrics-php/exposition-text": "^0.3.1",
+        "openmetrics-php/exposition-text": "^0.4.0",
         "guzzlehttp/guzzle": "^6.3 || ^7.2",
         "ext-json": "*"
     },
@@ -18,5 +18,8 @@
         "psr-4": {
             "WayToHealth\\OpenMetrics\\Ummon\\": "src/"
         }
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.11"
     }
 }
