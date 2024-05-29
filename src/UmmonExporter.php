@@ -7,7 +7,6 @@ use GuzzleHttp\Exception\ConnectException;
 use OpenMetricsPhp\Exposition\Text\Collections\CounterCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\GaugeCollection;
 use OpenMetricsPhp\Exposition\Text\Collections\LabelCollection;
-use OpenMetricsPhp\Exposition\Text\HttpResponse;
 use OpenMetricsPhp\Exposition\Text\Metrics\Counter;
 use OpenMetricsPhp\Exposition\Text\Metrics\Gauge;
 use OpenMetricsPhp\Exposition\Text\Types\Label;
